@@ -8,7 +8,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-
   <section id="loginScreen" class="login-screen">
     <div class="login-card">
       <div class="logo">ESHRA <span>CCcam</span></div>
@@ -20,7 +19,6 @@
         <input id="loginPassword" type="password" placeholder="كلمة المرور" required>
         <button type="submit">دخول إلى اللوحة</button>
       </form>
-
       <div id="loginMessage" class="message"></div>
     </div>
   </section>
@@ -37,7 +35,6 @@
           <small id="currentRole">مدير</small>
         </div>
       </div>
-
       <nav>
         <button class="nav-btn active" data-page="home">الرئيسية</button>
         <button class="nav-btn" data-page="subscriptions">اشتراكات CCcam</button>
@@ -108,7 +105,17 @@
 
           <form id="subscriptionForm" class="form-grid">
             <input id="customerName" placeholder="اسم العميل" required>
+
             <input id="accountUsername" placeholder="اسم المستخدم" required>
+
+            <input
+              id="accountPassword"
+              type="password"
+              placeholder="كلمة مرور CCcam"
+              autocomplete="new-password"
+              required
+            >
+
             <input id="startDate" type="date" required>
             <input id="endDate" type="date" required>
 
@@ -120,6 +127,7 @@
             </select>
 
             <input id="subscriptionNotes" placeholder="ملاحظات (اختياري)">
+
             <button type="submit">حفظ الاشتراك</button>
           </form>
 
@@ -182,4 +190,4 @@
   <script src="config.js"></script>
   <script src="app.js"></script>
 </body>
-  </html>
+</html>
