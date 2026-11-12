@@ -38,7 +38,6 @@ function statusLabel(status) {
 
 async function login(username, password) {
   username = username.trim().toLowerCase();
-
   const email = `${username}@login.eshra-panel.invalid`;
 
   const { data, error } = await db.auth.signInWithPassword({
@@ -153,8 +152,16 @@ function renderSubscriptions() {
   `).join("");
 }
 
+// إضافة اشتراك مع تشفير كلمة المرور
 async function addSubscription(event) {
   event.preventDefault();
+
+  const password = $("accountPassword").value;
+
+  if (!password || password.length > 256) {
+    showMessage("subscriptionMessage", "كلمة المرور غير صحيحة", true);
+    return;
+  }
 
   const record = {
     manager_id: currentUser.id,
@@ -167,6 +174,11 @@ async function addSubscription(event) {
     server_host: window.APP_CONFIG.SERVER_HOST,
     server_port: window.APP_CONFIG.SERVER_PORT
   };
+
+  if (!record.customer_name || !record.account_username) {
+    showMessage("subscriptionMessage", "أكمل البيانات المطلوبة", true);
+    return;
+  }
 
   if (record.end_date < record.start_date) {
     showMessage("subscriptionMessage", "تاريخ الانتهاء غير صحيح", true);
@@ -187,18 +199,69 @@ async function addSubscription(event) {
     return;
   }
 
-  const { error } = await db
-    .from("subscriptions")
-    .insert(record);
+  const submitButton = $("subscriptionForm").querySelector(
+    'button[type="submit"]'
+  );
 
-  if (error) {
-    showMessage("subscriptionMessage", error.message, true);
-    return;
+  submitButton.disabled = true;
+  submitButton.textContent = "جاري الحفظ...";
+
+  try {
+    // حفظ بيانات الاشتراك أولاً
+    const { data: saved, error: insertError } = await db
+      .from("subscriptions")
+      .insert(record)
+      .select("id")
+      .single();
+
+    if (insertError) throw insertError;
+
+    // إرسال كلمة المرور إلى وظيفة التشفير
+    const { data, error } = await db.functions.invoke("save-credential", {
+      body: {
+        subscription_id: saved.id,
+        password: password
+      }
+    });
+
+    if (error || data?.error || !data?.success) {
+      // حذف الاشتراك إذا فشل حفظ كلمة المرور
+      const { error: rollbackError } = await db
+        .from("subscriptions")
+        .delete()
+        .eq("id", saved.id);
+
+      if (rollbackError) {
+        throw new Error(
+          "فشل حفظ كلمة المرور، وتعذر التراجع عن إنشاء الاشتراك. " +
+          rollbackError.message
+        );
+      }
+
+      throw new Error(
+        data?.error || error?.message || "فشل تشفير كلمة المرور"
+      );
+    }
+
+    $("subscriptionForm").reset();
+
+    showMessage(
+      "subscriptionMessage",
+      "تم حفظ الاشتراك وتشفير كلمة المرور بنجاح"
+    );
+
+    await loadSubscriptions();
+
+  } catch (error) {
+    showMessage(
+      "subscriptionMessage",
+      error.message || "حدث خطأ أثناء الحفظ",
+      true
+    );
+  } finally {
+    submitButton.disabled = false;
+    submitButton.textContent = "حفظ الاشتراك";
   }
-
-  $("subscriptionForm").reset();
-  showMessage("subscriptionMessage", "تم حفظ الاشتراك بنجاح");
-  await loadSubscriptions();
 }
 
 async function deleteSubscription(id) {
