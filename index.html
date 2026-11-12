@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ESHRA CCcam Manager</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+  <section id="loginScreen" class="login-screen">
+    <div class="login-card">
+      <div class="logo">ESHRA <span>CCcam</span></div>
+      <h2>تسجيل الدخول</h2>
+      <p>أهلاً بك في لوحة إدارة الاشتراكات</p>
+
+      <form id="loginForm">
+        <input id="loginUsername" placeholder="اسم المستخدم" required>
+        <input id="loginPassword" type="password" placeholder="كلمة المرور" required>
+        <button type="submit">دخول إلى اللوحة</button>
+      </form>
+
+      <div id="loginMessage" class="message"></div>
+    </div>
+  </section>
+
+  <section id="dashboard" class="hidden">
+
+    <aside class="sidebar">
+      <div class="logo">ESHRA <span>CCcam</span></div>
+
+      <div class="user-info">
+        <div class="user-avatar">E</div>
+        <div>
+          <strong id="currentUsername">المستخدم</strong>
+          <small id="currentRole">مدير</small>
+        </div>
+      </div>
+
+      <nav>
+        <button class="nav-btn active" data-page="home">الرئيسية</button>
+        <button class="nav-btn" data-page="subscriptions">اشتراكات CCcam</button>
+        <button class="nav-btn owner-only hidden" data-page="managers">المديرون</button>
+      </nav>
+
+      <button id="logoutBtn" class="logout-btn">تسجيل الخروج</button>
+    </aside>
+
+    <main class="main-content">
+      <header>
+        <div>
+          <h1 id="pageTitle">الرئيسية</h1>
+          <p>إدارة الاشتراكات ومتابعة العملاء</p>
+        </div>
+        <div class="server-badge">
+          <span class="online-dot"></span>
+          cccam.ugeen.live:12006
+        </div>
+      </header>
+
+      <section id="homePage" class="page">
+        <div class="stats">
+          <div class="stat-card">
+            <span>إجمالي الاشتراكات</span>
+            <strong id="totalCount">0</strong>
+          </div>
+          <div class="stat-card">
+            <span>اشتراكات نشطة</span>
+            <strong id="activeCount">0</strong>
+          </div>
+          <div class="stat-card">
+            <span>اشتراكات منتهية</span>
+            <strong id="expiredCount">0</strong>
+          </div>
+          <div class="stat-card">
+            <span>تنتهي خلال 7 أيام</span>
+            <strong id="endingCount">0</strong>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>آخر الاشتراكات</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>العميل</th>
+                  <th>اسم المستخدم</th>
+                  <th>تاريخ الانتهاء</th>
+                  <th>الحالة</th>
+                </tr>
+              </thead>
+              <tbody id="recentTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section id="subscriptionsPage" class="page hidden">
+        <div class="toolbar">
+          <input id="searchInput" placeholder="ابحث باسم العميل أو اسم المستخدم">
+          <button id="showAddForm">+ إضافة مشترك</button>
+        </div>
+
+        <div id="addSubscriptionPanel" class="panel hidden">
+          <h2>إضافة اشتراك جديد</h2>
+
+          <form id="subscriptionForm" class="form-grid">
+            <input id="customerName" placeholder="اسم العميل" required>
+            <input id="accountUsername" placeholder="اسم المستخدم" required>
+            <input id="startDate" type="date" required>
+            <input id="endDate" type="date" required>
+
+            <select id="subscriptionStatus">
+              <option value="pending">بانتظار التفعيل</option>
+              <option value="active">نشط</option>
+              <option value="expired">منتهي</option>
+              <option value="suspended">موقوف</option>
+            </select>
+
+            <input id="subscriptionNotes" placeholder="ملاحظات (اختياري)">
+            <button type="submit">حفظ الاشتراك</button>
+          </form>
+
+          <div id="subscriptionMessage" class="message"></div>
+        </div>
+
+        <div class="panel">
+          <h2>قائمة الاشتراكات</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>العميل</th>
+                  <th>اسم المستخدم</th>
+                  <th>البداية</th>
+                  <th>الانتهاء</th>
+                  <th>الحالة</th>
+                  <th>الإجراءات</th>
+                </tr>
+              </thead>
+              <tbody id="subscriptionsTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section id="managersPage" class="page hidden">
+        <div class="panel">
+          <h2>إنشاء مدير جديد</h2>
+
+          <form id="managerForm" class="form-grid">
+            <input id="managerUsername" placeholder="اسم المدير" required>
+            <input id="managerPassword" type="password" placeholder="كلمة المرور" required>
+            <button type="submit">إنشاء حساب المدير</button>
+          </form>
+
+          <div id="managerMessage" class="message"></div>
+        </div>
+
+        <div class="panel">
+          <h2>المديرون</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>اسم المستخدم</th>
+                  <th>الحالة</th>
+                  <th>الإجراء</th>
+                </tr>
+              </thead>
+              <tbody id="managersTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </section>
+
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+  </html>
